@@ -1,0 +1,22 @@
+name: hquplink
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/swlegion/cards/commands/
+    - assets/swlegion/cards/units/
+    - assets/swlegion/cards/upgrades/
+    - assets/swlegion/dice/attack/
+    - assets/swlegion/dice/defense/
