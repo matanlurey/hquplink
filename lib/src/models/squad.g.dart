@@ -19,14 +19,21 @@ class _$SquadSerializer implements StructuredSerializer<Squad> {
       {FullType specifiedType = FullType.unspecified}) {
     final result = <Object>[
       'card',
-      serializers.serialize(object.card, specifiedType: const FullType(Unit)),
+      serializers.serialize(object.card,
+          specifiedType:
+              const FullType(Reference, const [const FullType(Unit)])),
       'upgrades',
       serializers.serialize(object.upgrades,
-          specifiedType:
-              const FullType(BuiltList, const [const FullType(Upgrade)])),
-      'id',
-      serializers.serialize(object.id, specifiedType: const FullType(String)),
+          specifiedType: const FullType(BuiltList, const [
+            const FullType(Reference, const [const FullType(Upgrade)])
+          ])),
     ];
+    if (object.id != null) {
+      result
+        ..add('id')
+        ..add(serializers.serialize(object.id,
+            specifiedType: const FullType(String)));
+    }
 
     return result;
   }
@@ -42,18 +49,21 @@ class _$SquadSerializer implements StructuredSerializer<Squad> {
       iterator.moveNext();
       final dynamic value = iterator.current;
       switch (key) {
-        case 'card':
-          result.card.replace(serializers.deserialize(value,
-              specifiedType: const FullType(Unit)) as Unit);
-          break;
-        case 'upgrades':
-          result.upgrades.replace(serializers.deserialize(value,
-              specifiedType: const FullType(
-                  BuiltList, const [const FullType(Upgrade)])) as BuiltList);
-          break;
         case 'id':
           result.id = serializers.deserialize(value,
               specifiedType: const FullType(String)) as String;
+          break;
+        case 'card':
+          result.card = serializers.deserialize(value,
+                  specifiedType:
+                      const FullType(Reference, const [const FullType(Unit)]))
+              as Reference<Unit>;
+          break;
+        case 'upgrades':
+          result.upgrades.replace(serializers.deserialize(value,
+              specifiedType: const FullType(BuiltList, const [
+                const FullType(Reference, const [const FullType(Upgrade)])
+              ])) as BuiltList);
           break;
       }
     }
@@ -64,24 +74,21 @@ class _$SquadSerializer implements StructuredSerializer<Squad> {
 
 class _$Squad extends Squad {
   @override
-  final Unit card;
-  @override
-  final BuiltList<Upgrade> upgrades;
-  @override
   final String id;
+  @override
+  final Reference<Unit> card;
+  @override
+  final BuiltList<Reference<Upgrade>> upgrades;
 
   factory _$Squad([void updates(SquadBuilder b)]) =>
       (new SquadBuilder()..update(updates)).build();
 
-  _$Squad._({this.card, this.upgrades, this.id}) : super._() {
+  _$Squad._({this.id, this.card, this.upgrades}) : super._() {
     if (card == null) {
       throw new BuiltValueNullFieldError('Squad', 'card');
     }
     if (upgrades == null) {
       throw new BuiltValueNullFieldError('Squad', 'upgrades');
-    }
-    if (id == null) {
-      throw new BuiltValueNullFieldError('Squad', 'id');
     }
   }
 
@@ -106,9 +113,9 @@ class _$Squad extends Squad {
   @override
   String toString() {
     return (newBuiltValueToStringHelper('Squad')
+          ..add('id', id)
           ..add('card', card)
-          ..add('upgrades', upgrades)
-          ..add('id', id))
+          ..add('upgrades', upgrades))
         .toString();
   }
 }
@@ -116,26 +123,27 @@ class _$Squad extends Squad {
 class SquadBuilder implements Builder<Squad, SquadBuilder> {
   _$Squad _$v;
 
-  UnitBuilder _card;
-  UnitBuilder get card => _$this._card ??= new UnitBuilder();
-  set card(UnitBuilder card) => _$this._card = card;
-
-  ListBuilder<Upgrade> _upgrades;
-  ListBuilder<Upgrade> get upgrades =>
-      _$this._upgrades ??= new ListBuilder<Upgrade>();
-  set upgrades(ListBuilder<Upgrade> upgrades) => _$this._upgrades = upgrades;
-
   String _id;
   String get id => _$this._id;
   set id(String id) => _$this._id = id;
+
+  Reference<Unit> _card;
+  Reference<Unit> get card => _$this._card;
+  set card(Reference<Unit> card) => _$this._card = card;
+
+  ListBuilder<Reference<Upgrade>> _upgrades;
+  ListBuilder<Reference<Upgrade>> get upgrades =>
+      _$this._upgrades ??= new ListBuilder<Reference<Upgrade>>();
+  set upgrades(ListBuilder<Reference<Upgrade>> upgrades) =>
+      _$this._upgrades = upgrades;
 
   SquadBuilder();
 
   SquadBuilder get _$this {
     if (_$v != null) {
-      _card = _$v.card?.toBuilder();
-      _upgrades = _$v.upgrades?.toBuilder();
       _id = _$v.id;
+      _card = _$v.card;
+      _upgrades = _$v.upgrades?.toBuilder();
       _$v = null;
     }
     return this;
@@ -158,13 +166,11 @@ class SquadBuilder implements Builder<Squad, SquadBuilder> {
   _$Squad build() {
     _$Squad _$result;
     try {
-      _$result = _$v ??
-          new _$Squad._(card: card.build(), upgrades: upgrades.build(), id: id);
+      _$result =
+          _$v ?? new _$Squad._(id: id, card: card, upgrades: upgrades.build());
     } catch (_) {
       String _$failedField;
       try {
-        _$failedField = 'card';
-        card.build();
         _$failedField = 'upgrades';
         upgrades.build();
       } catch (e) {

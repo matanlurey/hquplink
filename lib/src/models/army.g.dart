@@ -20,8 +20,9 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
     final result = <Object>[
       'commands',
       serializers.serialize(object.commandCards,
-          specifiedType:
-              const FullType(BuiltList, const [const FullType(CommandCard)])),
+          specifiedType: const FullType(BuiltList, const [
+            const FullType(Reference, const [const FullType(CommandCard)])
+          ])),
       'name',
       serializers.serialize(object.name, specifiedType: const FullType(String)),
       'max_points',
@@ -35,9 +36,13 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
           specifiedType: const FullType(BuiltList, const [
             const FullType(Reference, const [const FullType(Unit)])
           ])),
-      'id',
-      serializers.serialize(object.id, specifiedType: const FullType(String)),
     ];
+    if (object.id != null) {
+      result
+        ..add('id')
+        ..add(serializers.serialize(object.id,
+            specifiedType: const FullType(String)));
+    }
 
     return result;
   }
@@ -53,11 +58,15 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
       iterator.moveNext();
       final dynamic value = iterator.current;
       switch (key) {
+        case 'id':
+          result.id = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String;
+          break;
         case 'commands':
           result.commandCards.replace(serializers.deserialize(value,
-                  specifiedType: const FullType(
-                      BuiltList, const [const FullType(CommandCard)]))
-              as BuiltList);
+              specifiedType: const FullType(BuiltList, const [
+                const FullType(Reference, const [const FullType(CommandCard)])
+              ])) as BuiltList);
           break;
         case 'name':
           result.name = serializers.deserialize(value,
@@ -77,10 +86,6 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
                 const FullType(Reference, const [const FullType(Unit)])
               ])) as BuiltList);
           break;
-        case 'id':
-          result.id = serializers.deserialize(value,
-              specifiedType: const FullType(String)) as String;
-          break;
       }
     }
 
@@ -90,7 +95,9 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
 
 class _$Army extends Army {
   @override
-  final BuiltList<CommandCard> commandCards;
+  final String id;
+  @override
+  final BuiltList<Reference<CommandCard>> commandCards;
   @override
   final String name;
   @override
@@ -99,19 +106,17 @@ class _$Army extends Army {
   final int totalPoints;
   @override
   final BuiltList<Reference<Unit>> featuredUnits;
-  @override
-  final String id;
 
   factory _$Army([void updates(ArmyBuilder b)]) =>
       (new ArmyBuilder()..update(updates)).build();
 
   _$Army._(
-      {this.commandCards,
+      {this.id,
+      this.commandCards,
       this.name,
       this.maxPoints,
       this.totalPoints,
-      this.featuredUnits,
-      this.id})
+      this.featuredUnits})
       : super._() {
     if (commandCards == null) {
       throw new BuiltValueNullFieldError('Army', 'commandCards');
@@ -127,9 +132,6 @@ class _$Army extends Army {
     }
     if (featuredUnits == null) {
       throw new BuiltValueNullFieldError('Army', 'featuredUnits');
-    }
-    if (id == null) {
-      throw new BuiltValueNullFieldError('Army', 'id');
     }
   }
 
@@ -154,12 +156,12 @@ class _$Army extends Army {
   @override
   String toString() {
     return (newBuiltValueToStringHelper('Army')
+          ..add('id', id)
           ..add('commandCards', commandCards)
           ..add('name', name)
           ..add('maxPoints', maxPoints)
           ..add('totalPoints', totalPoints)
-          ..add('featuredUnits', featuredUnits)
-          ..add('id', id))
+          ..add('featuredUnits', featuredUnits))
         .toString();
   }
 }
@@ -167,10 +169,14 @@ class _$Army extends Army {
 class ArmyBuilder implements Builder<Army, ArmyBuilder> {
   _$Army _$v;
 
-  ListBuilder<CommandCard> _commandCards;
-  ListBuilder<CommandCard> get commandCards =>
-      _$this._commandCards ??= new ListBuilder<CommandCard>();
-  set commandCards(ListBuilder<CommandCard> commandCards) =>
+  String _id;
+  String get id => _$this._id;
+  set id(String id) => _$this._id = id;
+
+  ListBuilder<Reference<CommandCard>> _commandCards;
+  ListBuilder<Reference<CommandCard>> get commandCards =>
+      _$this._commandCards ??= new ListBuilder<Reference<CommandCard>>();
+  set commandCards(ListBuilder<Reference<CommandCard>> commandCards) =>
       _$this._commandCards = commandCards;
 
   String _name;
@@ -191,20 +197,16 @@ class ArmyBuilder implements Builder<Army, ArmyBuilder> {
   set featuredUnits(ListBuilder<Reference<Unit>> featuredUnits) =>
       _$this._featuredUnits = featuredUnits;
 
-  String _id;
-  String get id => _$this._id;
-  set id(String id) => _$this._id = id;
-
   ArmyBuilder();
 
   ArmyBuilder get _$this {
     if (_$v != null) {
+      _id = _$v.id;
       _commandCards = _$v.commandCards?.toBuilder();
       _name = _$v.name;
       _maxPoints = _$v.maxPoints;
       _totalPoints = _$v.totalPoints;
       _featuredUnits = _$v.featuredUnits?.toBuilder();
-      _id = _$v.id;
       _$v = null;
     }
     return this;
@@ -229,12 +231,12 @@ class ArmyBuilder implements Builder<Army, ArmyBuilder> {
     try {
       _$result = _$v ??
           new _$Army._(
+              id: id,
               commandCards: commandCards.build(),
               name: name,
               maxPoints: maxPoints,
               totalPoints: totalPoints,
-              featuredUnits: featuredUnits.build(),
-              id: id);
+              featuredUnits: featuredUnits.build());
     } catch (_) {
       String _$failedField;
       try {

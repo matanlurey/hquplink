@@ -9,6 +9,7 @@ dependencies:
 
   built_collection: ^4.1.0
   built_value: ^6.3.0
+  uuid: ^2.0.0
 
 dev_dependencies:
   flutter_test:

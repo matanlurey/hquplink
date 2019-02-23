@@ -14,16 +14,15 @@ abstract class Squad
   Squad._();
   factory Squad(void Function(SquadBuilder) _) = _$Squad;
 
+  @override
+  @nullable
+  String get id;
+
   /// Which [Unit] card this squad represents.
   @BuiltValueField(compare: false)
-  Unit get card;
+  Reference<Unit> get card;
 
   /// Upgrades the squad has added to [card].
   @BuiltValueField(compare: false)
-  BuiltList<Upgrade> get upgrades;
-
-  /// Total number of points used by this squad.
-  int get totalPoints {
-    return card.points + upgrades.fold<int>(0, (p, u) => p + u.points);
-  }
+  BuiltList<Reference<Upgrade>> get upgrades;
 }

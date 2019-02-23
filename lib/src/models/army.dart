@@ -12,9 +12,13 @@ abstract class Army with Indexable<Army> implements Built<Army, ArmyBuilder> {
   Army._();
   factory Army(void Function(ArmyBuilder) _) = _$Army;
 
+  @override
+  @nullable
+  String get id;
+
   /// Commands cards in the army list.
   @BuiltValueField(compare: false, wireName: 'commands')
-  BuiltList<CommandCard> get commandCards;
+  BuiltList<Reference<CommandCard>> get commandCards;
 
   /// Name of the army.
   @BuiltValueField(compare: false)
