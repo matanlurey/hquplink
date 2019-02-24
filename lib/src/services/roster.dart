@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:built_collection/built_collection.dart';
 import 'package:hquplink/models.dart';
 import 'package:meta/meta.dart';
 import 'package:swlegion/swlegion.dart';
@@ -68,24 +69,36 @@ class _Persistent<T extends Indexable<T>> implements Persistent<T> {
   list() => onList();
 }
 
+/// Fired when [LocalData] is mutated in a [DataStore].
+typedef LocalDataChanged = void Function(LocalData);
+
 /// An in-memory local representation of [DataStore].
 ///
 /// This backend does not support [Persistent.fetch] and [Persistent.list]
 /// completely (any mutations do not trigger another stream notification).
-class _LocalStore implements DataStore {
-  final List<Army> _armies;
-  final Map<Reference<Army>, List<Squad>> _squads;
+class LocalStore implements DataStore {
+  static void _doNothing(LocalData _) => _;
+
+  final LocalDataBuilder _localData;
+  final LocalDataChanged _onChanged;
   final Uuid _idGenerator;
 
-  _LocalStore.empty({
+  LocalStore({
     Uuid idGenerator,
-  })  : _armies = [],
-        _squads = {},
-        _idGenerator = idGenerator ?? Uuid();
+    LocalDataChanged onChanged = _doNothing,
+  })  : _localData = LocalDataBuilder(),
+        _idGenerator = idGenerator ?? Uuid(),
+        _onChanged = onChanged;
 
-  // TODO: Implement constructor that has a useful DSL for testing.
+  LocalStore.from(
+    LocalData data, {
+    Uuid idGenerator,
+    LocalDataChanged onChanged = _doNothing,
+  })  : _localData = data.toBuilder(),
+        _idGenerator = idGenerator ?? Uuid(),
+        _onChanged = onChanged;
 
-  int _indexOf<T extends Indexable<T>>(List<T> list, String id) {
+  int _indexOf<T extends Indexable<T>>(ListBuilder<T> list, String id) {
     final length = list.length;
     for (var i = 0; i < length; i++) {
       if (list[i].id == id) {
@@ -101,45 +114,54 @@ class _LocalStore implements DataStore {
   armies() {
     return Persistent(
       onDelete: (army) async {
-        _armies.removeAt(_indexOf(_armies, army.id));
+        _localData.armies.removeAt(_indexOf(_localData.armies, army.id));
+        _onChanged(_localData.build());
       },
       onUpdate: (army) async {
+        final armies = _localData.armies;
         if (army.id == null) {
           army = army.rebuild((b) => b.id = _nextId(Army));
-          _armies.add(army);
-          return army;
+          armies.add(army);
+        } else {
+          armies[_indexOf(armies, army.id)] = army;
         }
-        _armies[_indexOf(_armies, army.id)] = army;
+        _onChanged(_localData.build());
+        return army;
       },
       onFetch: (army) async* {
-        yield _armies[_indexOf(_armies, army.id)];
+        final armies = _localData.armies;
+        yield armies[_indexOf(armies, army.id)];
       },
       onList: () async* {
-        yield List.unmodifiable(_armies);
+        yield _localData.armies.build().asList();
       },
     );
   }
 
   @override
   squads(army) {
-    final squads = _squads.putIfAbsent(army.toRef(), () => []);
+    army = army.toRef();
+    final squads = _localData.squads[army];
     return Persistent(
       onDelete: (squad) async {
         squads.removeAt(_indexOf(squads, squad.id));
+        _onChanged(_localData.build());
       },
       onUpdate: (squad) async {
         if (squad.id == null) {
           squad = squad.rebuild((b) => b.id = _nextId(Squad));
           squads.add(squad);
-          return squad;
+        } else {
+          squads[_indexOf(squads, squad.id)] = squad;
         }
-        squads[_indexOf(squads, squad.id)] = squad;
+        _onChanged(_localData.build());
+        return squad;
       },
       onFetch: (squad) async* {
         yield squads[_indexOf(squads, squad.id)];
       },
       onList: () async* {
-        yield List.unmodifiable(squads);
+        yield squads.build().asList();
       },
     );
   }
