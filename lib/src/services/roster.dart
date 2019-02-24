@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:built_collection/built_collection.dart';
-import 'package:built_value/built_value.dart';
-import 'package:built_value/serializer.dart';
 import 'package:hquplink/models.dart';
 import 'package:meta/meta.dart';
 import 'package:swlegion/swlegion.dart';
@@ -34,7 +31,7 @@ abstract class Persistent<T extends Indexable<T>> {
 }
 
 /// Data persistance backend for the app.
-abstract class DataBackend {
+abstract class DataStore {
   /// Armies persisted.
   Persistent<Army> armies();
 
@@ -71,75 +68,78 @@ class _Persistent<T extends Indexable<T>> implements Persistent<T> {
   list() => onList();
 }
 
-class _LocalDataBackend implements DataBackend {
+/// An in-memory local representation of [DataStore].
+///
+/// This backend does not support [Persistent.fetch] and [Persistent.list]
+/// completely (any mutations do not trigger another stream notification).
+class _LocalStore implements DataStore {
+  final List<Army> _armies;
+  final Map<Reference<Army>, List<Squad>> _squads;
   final Uuid _idGenerator;
 
-  /// Data that is read/wrote to by this backend.
-  LocalDataBuilder _data;
-
-  _LocalDataBackend({
+  _LocalStore.empty({
     Uuid idGenerator,
-    LocalData initialData,
-  })  : _idGenerator = idGenerator ?? Uuid(),
-        _data = initialData?.toBuilder() ?? LocalDataBuilder();
+  })  : _armies = [],
+        _squads = {},
+        _idGenerator = idGenerator ?? Uuid();
 
-  String _generateId<T>() => _idGenerator.v5('', T.toString());
+  // TODO: Implement constructor that has a useful DSL for testing.
 
-  int _findById<T extends Indexable<T>>(List<T> list, String id) {
+  int _indexOf<T extends Indexable<T>>(List<T> list, String id) {
     final length = list.length;
     for (var i = 0; i < length; i++) {
       if (list[i].id == id) {
         return i;
       }
     }
-    throw StateError('No entity $T found');
+    return -1;
   }
+
+  String _nextId(Type entityType) => _idGenerator.v5('', '$entityType');
 
   @override
   armies() {
     return Persistent(
       onDelete: (army) async {
-        _data.armies.removeWhere((a) => a.id == army.id);
+        _armies.removeAt(_indexOf(_armies, army.id));
       },
       onUpdate: (army) async {
         if (army.id == null) {
-          army = army.rebuild((b) => b.id = _generateId<Army>());
-          _data.armies.add(army);
-          return;
-        } else {}
+          army = army.rebuild((b) => b.id = _nextId(Army));
+          _armies.add(army);
+          return army;
+        }
+        _armies[_indexOf(_armies, army.id)] = army;
       },
       onFetch: (army) async* {
-        yield _armies[_findById(_armies, army.id)];
+        yield _armies[_indexOf(_armies, army.id)];
       },
       onList: () async* {
-        yield _armies.toList();
+        yield List.unmodifiable(_armies);
       },
     );
   }
 
   @override
   squads(army) {
-    army = army.toRef();
+    final squads = _squads.putIfAbsent(army.toRef(), () => []);
     return Persistent(
       onDelete: (squad) async {
-        final squads = _squads[army];
-        squads.removeAt(_findById(squads, squad.id));
+        squads.removeAt(_indexOf(squads, squad.id));
       },
       onUpdate: (squad) async {
-        final squads = _squads.putIfAbsent(army, () => []);
         if (squad.id == null) {
-          squads.add(squad.rebuild((b) => b.id = _generateId<Squad>()));
-          return;
-        } else {
-          squads[_findById(squads, squad.id)] = squad;
+          squad = squad.rebuild((b) => b.id = _nextId(Squad));
+          squads.add(squad);
+          return squad;
         }
+        squads[_indexOf(squads, squad.id)] = squad;
       },
       onFetch: (squad) async* {
-        final squads = _squads[army];
-        yield squads[_findById(squads, squad.id)];
+        yield squads[_indexOf(squads, squad.id)];
       },
       onList: () async* {
-        yield _squads[army]?.toList() ?? const [];
+        yield List.unmodifiable(squads);
       },
     );
   }
