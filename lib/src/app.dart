@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'pages/armies.dart';
 import 'pages/browse.dart';
+import 'services/roster.dart';
 
 class HQUplinkApp extends StatefulWidget {
-  const HQUplinkApp();
+  final DataStore dataStore;
+
+  const HQUplinkApp({
+    @required this.dataStore,
+  });
 
   @override
   createState() => _HQUplinkAppState();
@@ -13,14 +18,17 @@ class HQUplinkApp extends StatefulWidget {
 class _HQUplinkAppState extends State<HQUplinkApp> {
   @override
   build(_) {
-    return MaterialApp(
-      title: 'HQ Uplink',
-      theme: ThemeData.dark(),
-      initialRoute: '/',
-      routes: const {
-        '/': _routeArmies,
-        '/browse': _routeBrowse,
-      },
+    return DataStore.at(
+      widget.dataStore,
+      MaterialApp(
+        title: 'HQ Uplink',
+        theme: ThemeData.dark(),
+        initialRoute: '/',
+        routes: const {
+          '/': _routeArmies,
+          '/browse': _routeBrowse,
+        },
+      ),
     );
   }
 

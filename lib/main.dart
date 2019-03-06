@@ -1,7 +1,10 @@
 import 'package:flutter/widgets.dart';
 
 import 'src/app.dart';
+import 'src/services/roster.dart';
 
 void main() {
-  runApp(const HQUplinkApp());
+  runApp(HQUplinkApp(
+    dataStore: LocalStore(),
+  ));
 }

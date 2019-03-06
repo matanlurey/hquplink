@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:built_collection/built_collection.dart';
+import 'package:flutter/widgets.dart';
 import 'package:hquplink/models.dart';
 import 'package:meta/meta.dart';
+import 'package:swlegion/catalog.dart';
 import 'package:swlegion/swlegion.dart';
 import 'package:uuid/uuid.dart';
 
@@ -33,11 +35,33 @@ abstract class Persistent<T extends Indexable<T>> {
 
 /// Data persistance backend for the app.
 abstract class DataStore {
+  /// Finds a [DataStore] for the provided [Widget] tree at [context].
+  static DataStore of(BuildContext context) {
+    final host = context.inheritFromWidgetOfExactType(_HostDataStore);
+    return (host as _HostDataStore)._dataStore;
+  }
+
+  /// Hosts a [DataStore] at the provided [Widget] tree at [child].
+  static Widget at(DataStore store, Widget child) {
+    return _HostDataStore(child, store);
+  }
+
   /// Armies persisted.
   Persistent<Army> armies();
 
   /// Squads persisted for the provided [army].
   Persistent<Squad> squads(Reference<Army> army);
+}
+
+class _HostDataStore extends InheritedWidget {
+  final DataStore _dataStore;
+
+  const _HostDataStore(Widget child, this._dataStore) : super(child: child);
+
+  @override
+  updateShouldNotify(_HostDataStore oldWidget) {
+    return _dataStore != oldWidget._dataStore;
+  }
 }
 
 class _Persistent<T extends Indexable<T>> implements Persistent<T> {
@@ -110,6 +134,25 @@ class LocalStore implements DataStore {
 
   String _nextId(Type entityType) => _idGenerator.v5('', '$entityType');
 
+  void _updateArmyAggregations(Reference<Army> reference) {
+    final armies = _localData.armies;
+    final index = _indexOf(armies, reference.id);
+    final squads = _localData.squads[reference];
+    armies[index] = armies[index].rebuild((b) {
+      return b.totalPoints = squads.build().fold(
+        0,
+        (sum, squad) {
+          final unit = catalog.toUnit(squad.card);
+          final upgrades = squad.upgrades.map(catalog.toUpgrade).fold<int>(
+                0,
+                (s, u) => s + u.points,
+              );
+          return sum + unit.points + upgrades;
+        },
+      );
+    });
+  }
+
   @override
   armies() {
     return Persistent(
@@ -145,6 +188,7 @@ class LocalStore implements DataStore {
     return Persistent(
       onDelete: (squad) async {
         squads.removeAt(_indexOf(squads, squad.id));
+        _updateArmyAggregations(army);
         _onChanged(_localData.build());
       },
       onUpdate: (squad) async {
@@ -154,6 +198,7 @@ class LocalStore implements DataStore {
         } else {
           squads[_indexOf(squads, squad.id)] = squad;
         }
+        _updateArmyAggregations(army);
         _onChanged(_localData.build());
         return squad;
       },
