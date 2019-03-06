@@ -15,7 +15,7 @@ abstract class Persistent<T extends Indexable<T>> {
     @required Future<T> Function(T) onUpdate,
     @required Stream<T> Function(Reference<T>) onFetch,
     @required Stream<List<T>> Function() onList,
-  }) = _Persistent;
+  }) = _Persistent<T>;
 
   /// Deletes [entity], returns a future that completes on deletion.
   Future<void> delete(Reference<T> entity);
@@ -158,6 +158,7 @@ class LocalStore implements DataStore {
     return Persistent(
       onDelete: (army) async {
         _localData.armies.removeAt(_indexOf(_localData.armies, army.id));
+        _localData.squads.removeAll(army.toRef());
         _onChanged(_localData.build());
       },
       onUpdate: (army) async {
@@ -187,14 +188,14 @@ class LocalStore implements DataStore {
     final squads = _localData.squads[army];
     return Persistent(
       onDelete: (squad) async {
-        squads.removeAt(_indexOf(squads, squad.id));
+        _localData.squads.remove(army, squads[_indexOf(squads, squad.id)]);
         _updateArmyAggregations(army);
         _onChanged(_localData.build());
       },
       onUpdate: (squad) async {
         if (squad.id == null) {
           squad = squad.rebuild((b) => b.id = _nextId(Squad));
-          squads.add(squad);
+          _localData.squads.add(army, squad);
         } else {
           squads[_indexOf(squads, squad.id)] = squad;
         }

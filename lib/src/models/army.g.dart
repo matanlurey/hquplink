@@ -23,6 +23,9 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
           specifiedType: const FullType(BuiltList, const [
             const FullType(Reference, const [const FullType(CommandCard)])
           ])),
+      'faction',
+      serializers.serialize(object.faction,
+          specifiedType: const FullType(Faction)),
       'name',
       serializers.serialize(object.name, specifiedType: const FullType(String)),
       'max_points',
@@ -68,6 +71,10 @@ class _$ArmySerializer implements StructuredSerializer<Army> {
                 const FullType(Reference, const [const FullType(CommandCard)])
               ])) as BuiltList);
           break;
+        case 'faction':
+          result.faction = serializers.deserialize(value,
+              specifiedType: const FullType(Faction)) as Faction;
+          break;
         case 'name':
           result.name = serializers.deserialize(value,
               specifiedType: const FullType(String)) as String;
@@ -99,6 +106,8 @@ class _$Army extends Army {
   @override
   final BuiltList<Reference<CommandCard>> commandCards;
   @override
+  final Faction faction;
+  @override
   final String name;
   @override
   final int maxPoints;
@@ -113,6 +122,7 @@ class _$Army extends Army {
   _$Army._(
       {this.id,
       this.commandCards,
+      this.faction,
       this.name,
       this.maxPoints,
       this.totalPoints,
@@ -120,6 +130,9 @@ class _$Army extends Army {
       : super._() {
     if (commandCards == null) {
       throw new BuiltValueNullFieldError('Army', 'commandCards');
+    }
+    if (faction == null) {
+      throw new BuiltValueNullFieldError('Army', 'faction');
     }
     if (name == null) {
       throw new BuiltValueNullFieldError('Army', 'name');
@@ -158,6 +171,7 @@ class _$Army extends Army {
     return (newBuiltValueToStringHelper('Army')
           ..add('id', id)
           ..add('commandCards', commandCards)
+          ..add('faction', faction)
           ..add('name', name)
           ..add('maxPoints', maxPoints)
           ..add('totalPoints', totalPoints)
@@ -178,6 +192,10 @@ class ArmyBuilder implements Builder<Army, ArmyBuilder> {
       _$this._commandCards ??= new ListBuilder<Reference<CommandCard>>();
   set commandCards(ListBuilder<Reference<CommandCard>> commandCards) =>
       _$this._commandCards = commandCards;
+
+  Faction _faction;
+  Faction get faction => _$this._faction;
+  set faction(Faction faction) => _$this._faction = faction;
 
   String _name;
   String get name => _$this._name;
@@ -203,6 +221,7 @@ class ArmyBuilder implements Builder<Army, ArmyBuilder> {
     if (_$v != null) {
       _id = _$v.id;
       _commandCards = _$v.commandCards?.toBuilder();
+      _faction = _$v.faction;
       _name = _$v.name;
       _maxPoints = _$v.maxPoints;
       _totalPoints = _$v.totalPoints;
@@ -233,6 +252,7 @@ class ArmyBuilder implements Builder<Army, ArmyBuilder> {
           new _$Army._(
               id: id,
               commandCards: commandCards.build(),
+              faction: faction,
               name: name,
               maxPoints: maxPoints,
               totalPoints: totalPoints,
@@ -256,4 +276,4 @@ class ArmyBuilder implements Builder<Army, ArmyBuilder> {
   }
 }
 
-// ignore_for_file: always_put_control_body_on_new_line,annotate_overrides,avoid_annotating_with_dynamic,avoid_as,avoid_catches_without_on_clauses,avoid_returning_this,lines_longer_than_80_chars,omit_local_variable_types,prefer_expression_function_bodies,sort_constructors_first,test_types_in_equals,unnecessary_const,unnecessary_new
+// ignore_for_file: always_put_control_body_on_new_line,always_specify_types,annotate_overrides,avoid_annotating_with_dynamic,avoid_as,avoid_catches_without_on_clauses,avoid_returning_this,lines_longer_than_80_chars,omit_local_variable_types,prefer_expression_function_bodies,sort_constructors_first,test_types_in_equals,unnecessary_const,unnecessary_new

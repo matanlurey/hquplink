@@ -20,6 +20,10 @@ abstract class Army with Indexable<Army> implements Built<Army, ArmyBuilder> {
   @BuiltValueField(compare: false, wireName: 'commands')
   BuiltList<Reference<CommandCard>> get commandCards;
 
+  /// Faction of the army's units.
+  @BuiltValueField(compare: false)
+  Faction get faction;
+
   /// Name of the army.
   @BuiltValueField(compare: false)
   String get name;
