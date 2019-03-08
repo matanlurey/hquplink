@@ -27,8 +27,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/swlegion/cards/commands/
-    - assets/swlegion/cards/units/
-    - assets/swlegion/cards/upgrades/
-    - assets/swlegion/dice/attack/
-    - assets/swlegion/dice/defense/
+    - assets/cards/commands/
+    - assets/cards/units/
+    - assets/cards/upgrades/
+    - assets/dice/attack/
+    - assets/dice/defense/

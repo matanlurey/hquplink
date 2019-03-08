@@ -28,10 +28,10 @@ echo "Working in $WORKING_PATH..."
 
 # TODO: Add ability to pin the SHA.
 git clone https://github.com/hquplink/swlegion-assets/
-echo "Copying cards to $ASSETS_PATH/cards..."
-cp -r swlegion-assets/cards $ASSETS_PATH/cards
-echo "Copying dice to $ASSETS_PATH/dice..."
-cp -r swlegion-assets/dice $ASSETS_PATH/dice
+echo "Copying cards to $ASSETS_PATH..."
+cp -r swlegion-assets/cards $ASSETS_PATH
+echo "Copying dice to $ASSETS_PATH..."
+cp -r swlegion-assets/dice $ASSETS_PATH
 echo "Done!"
 popd
 exit 0
