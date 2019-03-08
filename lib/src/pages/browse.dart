@@ -90,6 +90,11 @@ class _BrowseCommandsByFaction extends StatelessWidget {
   }
 }
 
+// TODO: Finish this feature.
+// 1. Add headings (i.e LUKE SKYWALKER)
+// 2. Add pips (as trailing icons)
+// 3. Make clickable to description and preview
+
 class _BrowseCommandCards extends StatelessWidget {
   final Iterable<CommandCard> cards;
 
