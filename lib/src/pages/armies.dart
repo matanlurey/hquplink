@@ -7,6 +7,7 @@ class ArmiesPage extends StatelessWidget {
   @override
   build(context) {
     return Page(
+      body: Container(),
       title: 'Armies',
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),

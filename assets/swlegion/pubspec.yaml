@@ -1,0 +1,7 @@
+name: swlegion_assets
+
+dev_dependencies:
+  build: ^1.0.2
+  build_runner: ^1.1.2
+  image: ^2.0.7
+  path: ^1.6.2

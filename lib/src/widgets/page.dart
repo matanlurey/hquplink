@@ -15,6 +15,9 @@ class Page extends StatelessWidget {
   @visibleForTesting
   static final Key buttonKey = UniqueKey();
 
+  /// Body of the page.
+  final Widget body;
+
   /// Title of the page.
   final String title;
 
@@ -23,6 +26,7 @@ class Page extends StatelessWidget {
 
   const Page({
     @required this.title,
+    @required this.body,
     this.floatingActionButton,
   }) : assert(title != null);
 
@@ -58,6 +62,7 @@ class Page extends StatelessWidget {
           ],
         ),
       ),
+      body: body,
     );
   }
 }
