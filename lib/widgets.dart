@@ -1,4 +1,6 @@
+export 'src/widgets/icons.dart';
 export 'src/widgets/page.dart';
+export 'src/widgets/tiles.dart';
 
 final _matcher = RegExp(r'[_.\- ]+(\w|$)');
 

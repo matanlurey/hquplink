@@ -1,4 +1,5 @@
 import 'package:built_collection/built_collection.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hquplink/widgets.dart';
 import 'package:swlegion/catalog.dart';
@@ -90,11 +91,6 @@ class _BrowseCommandsByFaction extends StatelessWidget {
   }
 }
 
-// TODO: Finish this feature.
-// 1. Add headings (i.e LUKE SKYWALKER)
-// 2. Add pips (as trailing icons)
-// 3. Make clickable to description and preview
-
 class _BrowseCommandCards extends StatelessWidget {
   final Iterable<CommandCard> cards;
 
@@ -104,22 +100,58 @@ class _BrowseCommandCards extends StatelessWidget {
 
   @override
   build(context) {
+    void onTap(CommandCard card) => _onTap(context, card);
+    final tiles = _groupByUnit(cards).entries.map(
+      (entry) {
+        final cards = entry.value.toList()..sort(_compareByPip);
+        if (entry.key == null) {
+          return CommandTileGroup.generic(
+            cards: cards,
+            onTap: onTap,
+          );
+        } else {
+          return CommandTileGroup(
+            cards: cards,
+            unit: entry.key,
+            onTap: onTap,
+          );
+        }
+      },
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Commands'),
       ),
       body: ListView(
-        children: cards.map((card) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: AssetImage(
-                'assets/cards/commands/${card.id}.thumb.png',
-              ),
-            ),
-            title: Text(card.name),
-          );
-        }).toList(),
+        children: ListTile.divideTiles(
+          context: context,
+          tiles: tiles,
+        ).toList(),
       ),
     );
+  }
+
+  void _onTap(BuildContext context, CommandCard card) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: Image.asset('assets/cards/commands/${card.id}.png'),
+        );
+      },
+    );
+  }
+
+  static int _compareByPip(CommandCard a, CommandCard b) {
+    return a.pips.compareTo(b.pips);
+  }
+
+  static Map<Reference<Unit>, Iterable<CommandCard>> _groupByUnit(
+    Iterable<CommandCard> cards,
+  ) {
+    return groupBy(cards, (c) => c.required.isEmpty ? null : c.required.first);
   }
 }
