@@ -4,8 +4,8 @@ WIP.
 
 ## Updating assets
 
-To update the `assets/swlegion` directory:
+To update the `assets/` directory from `swlegion-assets`:
 
 ```bash
-$ git submodule foreach git pull origin master
+$ tool/update-assets.sh
 ```
