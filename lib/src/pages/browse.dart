@@ -91,22 +91,25 @@ class _BrowseCommandCards extends StatelessWidget {
 
   @override
   build(context) {
-    void onTap(CommandCard card) => _onTap(context, card);
     final tiles = _groupByUnit(cards).asMap().entries.map(
       (entry) {
         final cards = entry.value.toList()..sort(_compareByPip);
-        if (entry.key == null) {
-          return CommandTileGroup.generic(
-            cards: cards,
-            onTap: onTap,
-          );
-        } else {
-          return CommandTileGroup(
-            cards: cards,
-            unit: entry.key,
-            onTap: onTap,
-          );
-        }
+        return Builder(
+          builder: (context) {
+            if (entry.key == null) {
+              return CommandTileGroup.generic(
+                cards: cards,
+                onTap: (card) => previewCommandCard(context, card),
+              );
+            } else {
+              return CommandTileGroup(
+                cards: cards,
+                unit: entry.key,
+                onTap: (card) => previewCommandCard(context, card),
+              );
+            }
+          },
+        );
       },
     );
     return Scaffold(
@@ -119,20 +122,6 @@ class _BrowseCommandCards extends StatelessWidget {
           tiles: tiles,
         ).toList(),
       ),
-    );
-  }
-
-  void _onTap(BuildContext context, CommandCard card) {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Image.asset('assets/cards/commands/${card.id}.png'),
-        );
-      },
     );
   }
 
@@ -278,9 +267,8 @@ class _BrowseUnits extends StatelessWidget {
 
   @override
   build(context) {
-    void onTap(Unit card) => _onTap(context, card);
-    final tiles = _groupByRank(cards).asMap().entries.toList()
-      ..sort((a, b) => _sortByRank(a.key, b.key));
+    final entries = _groupByRank(cards).asMap().entries.toList();
+    final tiles = entries..sort((a, b) => _sortByRank(a.key, b.key));
     return Scaffold(
       appBar: AppBar(
         title: title,
@@ -290,30 +278,20 @@ class _BrowseUnits extends StatelessWidget {
           context: context,
           tiles: tiles.map(
             (entry) {
-              return UnitTileGroup(
-                cards: entry.value.toList()
-                  ..sort((a, b) => a.name.compareTo(b.name)),
-                rank: entry.key,
-                onTap: onTap,
+              final values = entry.value.toList();
+              return Builder(
+                builder: (context) {
+                  return UnitTileGroup(
+                    cards: values..sort((a, b) => a.name.compareTo(b.name)),
+                    rank: entry.key,
+                    onTap: (card) => previewUnitCard(context, card),
+                  );
+                },
               );
             },
           ),
         ).toList(),
       ),
-    );
-  }
-
-  void _onTap(BuildContext context, Unit card) {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Image.asset('assets/cards/units/${card.id}.png'),
-        );
-      },
     );
   }
 
@@ -394,7 +372,6 @@ class _BrowseUpgrades extends StatelessWidget {
 
   @override
   build(context) {
-    void onTap(Upgrade card) => _onTap(context, card);
     final entries = _groupBySlot(cards).asMap().entries;
     final tiles = entries.toList()..sort((a, b) => _sortBySlot(a.key, b.key));
     return Scaffold(
@@ -406,30 +383,20 @@ class _BrowseUpgrades extends StatelessWidget {
           context: context,
           tiles: tiles.map(
             (entry) {
-              return UpgradeTileGroup(
-                cards: entry.value.toList()
-                  ..sort((a, b) => a.name.compareTo(b.name)),
-                slot: entry.key,
-                onTap: onTap,
+              final values = entry.value.toList();
+              return Builder(
+                builder: (context) {
+                  return UpgradeTileGroup(
+                    cards: values..sort((a, b) => a.name.compareTo(b.name)),
+                    slot: entry.key,
+                    onTap: (card) => previewUpgradeCard(context, card),
+                  );
+                },
               );
             },
           ),
         ).toList(),
       ),
-    );
-  }
-
-  void _onTap(BuildContext context, Upgrade card) {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Image.asset('assets/cards/upgrades/${card.id}.png'),
-        );
-      },
     );
   }
 
