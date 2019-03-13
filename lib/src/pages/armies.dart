@@ -12,7 +12,7 @@ class ArmiesPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
-          // TODO: Implement.
+          ArmyMetaDialog.show(context);
         },
       ),
     );
