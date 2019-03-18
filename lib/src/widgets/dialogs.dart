@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hquplink/models.dart';
+import 'package:hquplink/widgets.dart';
 import 'package:swlegion/swlegion.dart';
 
 export 'dialogs/preview.dart';
@@ -61,14 +62,12 @@ class _ArmyMetaDialogState extends State<ArmyMetaDialog> {
   build(context) {
     return Scaffold(
       appBar: AppBar(
-        title: isExisting ? const Text('Edit') : const Text('Add'),
+        title: isExisting ? const Text('Edit Army') : const Text('Add Army'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: army.name.isNotEmpty && army.faction != null
-                ? () {
-                    print(army.build());
-                  }
+                ? () => Navigator.pop(context, army.build())
                 : null,
           ),
         ],
@@ -93,25 +92,51 @@ class _ArmyMetaDialogState extends State<ArmyMetaDialog> {
                   }
                 },
               ),
-              RadioListTile<Faction>(
-                title: const Text('Imperials'),
-                value: Faction.imperials,
-                groupValue: army.faction,
+              _FactionSelector(
                 onChanged: (faction) {
                   setState(() => army.faction = faction);
                 },
-              ),
-              RadioListTile<Faction>(
-                title: const Text('Rebels'),
-                value: Faction.rebels,
-                groupValue: army.faction,
-                onChanged: (faction) {
-                  setState(() => army.faction = faction);
-                },
+                selected: army.faction,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FactionSelector extends StatelessWidget {
+  /// Selected faction, if any.
+  final Faction selected;
+
+  /// Newly selected faction callback.
+  final void Function(Faction) onChanged;
+
+  const _FactionSelector({
+    @required this.selected,
+    @required this.onChanged,
+  }) : assert(onChanged != null);
+
+  @override
+  build(_) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        children: const [Faction.imperials, Faction.rebels].map((faction) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Opacity(
+              child: InkWell(
+                child: FactionIcon(faction: faction),
+                onTap: () {
+                  onChanged(faction);
+                },
+              ),
+              opacity: selected == faction ? 1.0 : 0.5,
+            ),
+          );
+        }).toList(),
       ),
     );
   }
