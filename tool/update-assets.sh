@@ -32,6 +32,8 @@ echo "Copying cards to $ASSETS_PATH..."
 cp -r swlegion-assets/cards $ASSETS_PATH
 echo "Copying dice to $ASSETS_PATH..."
 cp -r swlegion-assets/dice $ASSETS_PATH
+echo "Copying faction to $ASSETS_PATH..."
+cp -r swlegion-assets/faction $ASSETS_PATH
 echo "Done!"
 popd
 exit 0
