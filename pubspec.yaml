@@ -32,3 +32,4 @@ flutter:
     - assets/cards/upgrades/
     - assets/dice/attack/
     - assets/dice/defense/
+    - assets/faction/

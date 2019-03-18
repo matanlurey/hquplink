@@ -83,6 +83,8 @@ class _BrowseCommandsByFaction extends StatelessWidget {
 }
 
 class _BrowseCommandCards extends StatelessWidget {
+  static const _noUnit = Reference<Unit>('');
+
   final Iterable<CommandCard> cards;
 
   const _BrowseCommandCards({
@@ -91,12 +93,12 @@ class _BrowseCommandCards extends StatelessWidget {
 
   @override
   build(context) {
-    final tiles = _groupByUnit(cards).asMap().entries.map(
+    final tiles = _groupByUnit(cards, defaultTo: _noUnit).asMap().entries.map(
       (entry) {
         final cards = entry.value.toList()..sort(_compareByPip);
         return Builder(
           builder: (context) {
-            if (entry.key == null) {
+            if (entry.key == _noUnit) {
               return CommandTileGroup.generic(
                 cards: cards,
                 onTap: (card) => previewCommandCard(context, card),
@@ -130,9 +132,14 @@ class _BrowseCommandCards extends StatelessWidget {
   }
 
   static BuiltListMultimap<Reference<Unit>, CommandCard> _groupByUnit(
-    Iterable<CommandCard> cards,
-  ) {
-    return groupBy(cards, (c) => c.required.isEmpty ? null : c.required.first);
+    Iterable<CommandCard> cards, {
+    @required Reference<Unit> defaultTo,
+  }) {
+    assert(defaultTo != null);
+    return groupBy(
+      cards,
+      (c) => c.required.isEmpty ? defaultTo : c.required.first,
+    );
   }
 }
 
