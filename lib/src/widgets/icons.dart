@@ -2,6 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:hquplink/common.dart';
 import 'package:swlegion/swlegion.dart';
 
+class FactionIcon extends StatelessWidget {
+  /// Faction being referenced.
+  final Faction faction;
+
+  const FactionIcon({
+    @required this.faction,
+  }) : assert(faction != null);
+
+  @override
+  build(_) {
+    return CircleAvatar(
+      backgroundImage: AssetImage(
+        'assets/faction/${faction.name}.png',
+      ),
+    );
+  }
+}
+
 class FallbackIcon extends StatelessWidget {
   /// Name of card being referenced without an asset.
   final Indexable<void> card;
