@@ -3,6 +3,8 @@ import 'package:hquplink/widgets.dart';
 import 'package:swlegion/catalog.dart';
 import 'package:swlegion/swlegion.dart';
 
+export 'tiles/army_preview.dart';
+
 /// Creates a [ListTile] for a [CommandCard].
 class CommandTile extends StatelessWidget {
   /// [CommandCard] being referenced for the tile.
@@ -251,6 +253,26 @@ class UpgradeTileGroup extends StatelessWidget {
     ).toList();
     return Column(
       children: header + children,
+    );
+  }
+}
+
+class DismissBackground extends StatelessWidget {
+  const DismissBackground();
+
+  @override
+  build(context) {
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.primaryColor,
+      child: Row(
+        children: const [
+          Icon(Icons.delete),
+          Icon(Icons.delete),
+        ],
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
 }
