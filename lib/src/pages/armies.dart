@@ -12,11 +12,12 @@ class ArmiesPage extends StatefulWidget {
 
 class _ArmiesPageState extends State<ArmiesPage> {
   Stream<List<Army>> _armies = const Stream.empty();
+  DataStore _store;
 
   @override
   didChangeDependencies() {
-    final store = DataStore.of(context);
-    _armies = store.armies().list();
+    _store = DataStore.of(context);
+    _armies = _store.armies().list();
     super.didChangeDependencies();
   }
 
@@ -27,15 +28,11 @@ class _ArmiesPageState extends State<ArmiesPage> {
         initialData: const [],
         stream: _armies,
         builder: (context, snapshot) {
-          return ListView(
-            children: snapshot.data.map((army) {
-              return ListTile(
-                title: Text(army.name),
-                leading: FactionIcon(
-                  faction: army.faction,
-                ),
-              );
-            }).toList(),
+          return ArmyPreviewList(
+            armies: snapshot.data,
+            onDelete: (army) {
+              _store.armies().delete(army.toRef());
+            },
           );
         },
       ),

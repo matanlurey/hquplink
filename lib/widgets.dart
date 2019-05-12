@@ -14,4 +14,3 @@ String toTitleCase(String input) {
   final result = replaced[0].toUpperCase() + replaced.substring(1);
   return result.replaceAll('-', ' ');
 }
-
