@@ -3,18 +3,20 @@ import 'package:hquplink/models.dart';
 import 'package:hquplink/src/services/roster.dart';
 import 'package:hquplink/widgets.dart';
 
-import 'squads.dart';
+class SquadsPage extends StatefulWidget {
+  final Army army;
 
-class ArmiesPage extends StatefulWidget {
-  const ArmiesPage();
+  const SquadsPage({
+    this.army,
+  });
 
   @override
-  createState() => _ArmiesPageState();
+  createState() => _SquadsPageState();
 }
 
-class _ArmiesPageState extends State<ArmiesPage> {
-  /// Currentlty displayed army list.
-  var _armies = const Stream<List<Army>>.empty();
+class _SquadsPageState extends State<SquadsPage> {
+  /// Currentlty displayed units for the army.
+  var _units = const Stream<List<Squad>>.empty();
 
   /// Handle to the currently active [DataStore].
   DataStore _store;
@@ -24,7 +26,7 @@ class _ArmiesPageState extends State<ArmiesPage> {
     final store = DataStore.of(context);
     if (store != _store) {
       _store = store;
-      _armies = store.armies().list();
+      _units = store.squads(widget.army.toRef()).list();
     }
     super.didChangeDependencies();
   }
@@ -32,28 +34,16 @@ class _ArmiesPageState extends State<ArmiesPage> {
   @override
   build(context) {
     return Page(
-      body: StreamBuilder<List<Army>>(
-        // TODO: Avoid FOUC  by pre-fetching?
+      body: StreamBuilder<List<Squad>>(
+        // TODO: Avoid FOUC by pre-fetching?
         initialData: const [],
-        stream: _armies,
+        stream: _units,
         builder: (context, snapshot) {
-          return ArmyPreviewList(
-            armies: snapshot.data,
-            onDelete: (army) {
-              _store.armies().delete(army.toRef());
-            },
-            onPressed: (army) {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => SquadsPage(army: army),
-                ),
-              );
-            },
-          );
+          // TOOD: Implement.
+          return Container();
         },
       ),
-      title: 'Armies',
+      title: widget.army.name,
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () async {

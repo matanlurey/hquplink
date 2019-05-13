@@ -345,7 +345,7 @@ class _BrowseUpgradesByFaction extends StatelessWidget {
     );
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Units'),
+        title: const Text('Upgrades'),
       ),
       body: ListView(
         children: factions.asMap().entries.map((pair) {
