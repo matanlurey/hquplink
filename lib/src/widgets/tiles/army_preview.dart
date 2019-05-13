@@ -4,9 +4,11 @@ import 'package:hquplink/widgets.dart';
 
 class ArmyPreviewTile extends StatelessWidget {
   final Army army;
+  final void Function() onPressed;
 
   const ArmyPreviewTile({
     @required this.army,
+    this.onPressed,
   }) : assert(army != null);
 
   @override
@@ -18,6 +20,7 @@ class ArmyPreviewTile extends StatelessWidget {
         faction: army.faction,
       ),
       trailing: army.featuredUnits.isEmpty ? const Text('No Units') : null,
+      onTap: onPressed,
     );
   }
 }
@@ -29,18 +32,23 @@ class ArmyPreviewList extends StatefulWidget {
   /// Callback invoked when an [Army] should be deleted.
   final void Function(Army) onDelete;
 
+  /// Callback invoked when an [Army] should be activated.
+  final void Function(Army) onPressed;
+
   const ArmyPreviewList({
     @required this.armies,
     @required this.onDelete,
+    @required this.onPressed,
   })  : assert(armies != null),
-        assert(onDelete != null);
+        assert(onDelete != null),
+        assert(onPressed != null);
 
   @override
   createState() => _ArmyPreviewListState();
 }
 
 class _ArmyPreviewListState extends State<ArmyPreviewList> {
-  List<Army> visibleArmies = const [];
+  var visibleArmies = const <Army>[];
 
   @override
   void didUpdateWidget(_) {
@@ -53,7 +61,10 @@ class _ArmyPreviewListState extends State<ArmyPreviewList> {
     return ListView(
       children: visibleArmies.map((army) {
         return Dismissible(
-          child: ArmyPreviewTile(army: army),
+          child: ArmyPreviewTile(
+            army: army,
+            onPressed: () => widget.onPressed(army),
+          ),
           key: Key(army.id),
           background: const DismissBackground(),
           onDismissed: (_) => _onDismissed(army),
