@@ -37,11 +37,9 @@ class _ArmiesPageState extends State<ArmiesPage> {
         initialData: const [],
         stream: _armies,
         builder: (context, snapshot) {
-          print('>>> builder: ${snapshot.data.map((a) => a.name)}');
           return ArmyPreviewList(
             armies: snapshot.data,
             onDelete: (army) {
-              print('>>> onDelete(${army.name})');
               _store.armies().delete(army.toRef());
             },
             onPressed: (army) {
