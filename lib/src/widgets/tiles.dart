@@ -24,8 +24,14 @@ class CommandTile extends StatelessWidget {
     return ListTile(
       leading: CommandIcon(card: details),
       trailing: Text('${details.pips}'),
-      title: Text(details.name),
-      subtitle: Text(details.activated),
+      title: Text(
+        details.name,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        details.activated,
+        overflow: TextOverflow.ellipsis,
+      ),
       onTap: onTap,
     );
   }

@@ -22,7 +22,8 @@ dev_dependencies:
 
 dependency_overrides:
   swlegion:
-    path: ../swlegion
+    git:
+      url: https://github.com/swlegion/swlegion.git
 
 flutter:
   uses-material-design: true
