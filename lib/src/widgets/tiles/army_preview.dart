@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hquplink/models.dart';
 import 'package:hquplink/widgets.dart';
+import 'package:swlegion/swlegion.dart';
 
 class ArmyPreviewTile extends StatelessWidget {
   final Army army;
@@ -48,12 +49,12 @@ class ArmyPreviewList extends StatefulWidget {
 }
 
 class _ArmyPreviewListState extends State<ArmyPreviewList> {
-  var visibleArmies = const <Army>[];
+  final Set<Reference<Army>> _deleting = {};
 
-  @override
-  void didUpdateWidget(_) {
-    visibleArmies = widget.armies.toList();
-    super.didUpdateWidget(_);
+  Iterable<Army> get visibleArmies {
+    print(
+        'Possible => ${widget.armies.map((a) => a.id)}. Deleting => ${_deleting.map((a) => a.id)}');
+    return widget.armies.where((a) => !_deleting.contains(a.toRef()));
   }
 
   @override
@@ -77,9 +78,8 @@ class _ArmyPreviewListState extends State<ArmyPreviewList> {
   //
   // Also potentially worthy to encapsulate the entire widget concept.
   void _onDismissed(Army army) async {
-    final index = visibleArmies.indexOf(army);
     setState(() {
-      visibleArmies.removeAt(index);
+      _deleting.add(army.toRef());
     });
     final controller = Scaffold.of(context).showSnackBar(
       SnackBar(
@@ -92,12 +92,11 @@ class _ArmyPreviewListState extends State<ArmyPreviewList> {
         ),
       ),
     );
-    if (await controller.closed == SnackBarClosedReason.action) {
-      setState(() {
-        visibleArmies.insert(index, army);
-      });
-    } else {
+    if (await controller.closed != SnackBarClosedReason.action) {
       widget.onDelete(army);
     }
+    setState(() {
+      _deleting.remove(army.toRef());
+    });
   }
 }

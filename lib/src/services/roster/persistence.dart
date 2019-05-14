@@ -7,6 +7,9 @@ abstract class Persistent<T extends Indexable<T>> {
   /// Deletes [entity], returns a [Future] that completes on deletion.
   Future<void> delete(Reference<T> entity);
 
+  /// Deletes all entities related to this collection.
+  Future<void> clear();
+
   /// Updates [entity], returns a [Future] that completes with the saved entity.
   ///
   /// If [Indexable.id] is not specified, it is assumed that the entity has not

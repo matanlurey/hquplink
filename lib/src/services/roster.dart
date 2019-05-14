@@ -82,11 +82,18 @@ class LocalStore implements DataStore {
     return -1;
   }
 
-  String _nextId(Type entityType) => _idGenerator.v5('', '$entityType');
+  String _nextId(Type entityType) {
+    return _idGenerator.v1(
+      options: <String, String>{'entityType': '$entityType'},
+    );
+  }
 
   void _updateArmyAggregations(Reference<Army> reference) {
     final armies = _localData.armies;
     final index = _indexOf(armies, reference.id);
+    if (index == -1) {
+      return;
+    }
     final squads = _localData.squads[reference].build();
     final totalPoints = squads.fold<int>(0, (sum, squad) {
       final unit = catalog.toUnit(squad.card);
@@ -97,10 +104,13 @@ class LocalStore implements DataStore {
       );
       return sum + unit.points + sumUpgrades;
     });
-    // Causes a Stack Overflow :(
     this
         .armies()
         .update(armies[index].rebuild((b) => b.totalPoints = totalPoints));
+  }
+
+  void _clearSquads(Reference<Army> army) {
+    _squads[army]?.clear();
   }
 
   void _scheduleDataChanged() {
@@ -124,8 +134,11 @@ class LocalStore implements DataStore {
           return army.rebuild((b) => b.id = _nextId(Army));
         },
       );
-      _armies = LocalPersistance(list, (ref) {
+      _armies = LocalPersistance(list, (ref, action) {
         _scheduleDataChanged();
+        if (action == LocalDataAction.deleted) {
+          _clearSquads(ref);
+        }
       });
     }
     return _armies;
@@ -144,7 +157,7 @@ class LocalStore implements DataStore {
           return squad.rebuild((b) => b.id = _nextId(Squad));
         },
       );
-      squad = _squads[army] = LocalPersistance(list, (_) {
+      squad = _squads[army] = LocalPersistance(list, (_, __) {
         _updateArmyAggregations(army);
         _scheduleDataChanged();
       });

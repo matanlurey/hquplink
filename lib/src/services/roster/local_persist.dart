@@ -61,6 +61,13 @@ class EntityList<T extends Indexable<T>> {
     return true;
   }
 
+  /// Clears all entities.
+  ///
+  /// **NOTE**: This does not invoke notifiers.
+  void clear() {
+    _delegate.clear();
+  }
+
   /// Inserts or updates [entity] from the backing store.
   T update(T entity) {
     if (entity.id == null) {
@@ -85,24 +92,30 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
   final EntityList<T> _data;
 
   /// Invoked when the backing store has been updated.
-  final void Function(Reference<T>) _notifyChanged;
+  final void Function(Reference<T>, LocalDataAction) _notifyChanged;
 
   LocalPersistance(this._data, this._notifyChanged);
 
   @override
+  clear() async {
+    _data.clear();
+    _notifyChanged(null, null);
+  }
+
+  @override
   delete(entity) async {
     _data.remove(entity);
-    _notifyChanged(entity);
+    _notifyChanged(entity, LocalDataAction.deleted);
   }
 
   @override
   update(entity) async {
     final result = _data.update(entity);
-    _notifyChanged(result.toRef());
+    _notifyChanged(result.toRef(), LocalDataAction.updated);
     return result;
   }
 
-  Map<Reference<T>, StreamController<T>> _onFetch;
+  final _onFetch = <Reference<T>, StreamController<T>>{};
 
   @override
   fetch(entity) {
@@ -132,15 +145,15 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
     _onList ??= StreamController.broadcast(
       onCancel: () {
         _onList = null;
-        _onListUpdated.cancel();
-        _onListDeleted.cancel();
+        _onListUpdated?.cancel();
+        _onListDeleted?.cancel();
       },
       onListen: () {
         void update() {
-          _onList.add(_data._delegate.build().asList());
+          _onList?.add(_data._delegate.build().asList());
         }
 
-        _onListUpdated = _data.onUpdated.listen((_) {
+        _onListDeleted = _data.onDeleted.listen((_) {
           update();
         });
 
@@ -154,4 +167,10 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
     );
     return _onList.stream;
   }
+}
+
+/// Known reasons that [LocalPersistance] notifies the provided callback.
+enum LocalDataAction {
+  updated,
+  deleted,
 }
