@@ -180,5 +180,5 @@ class SimpleUuid implements Uuid {
   Object noSuchMethod(_) => super.noSuchMethod(_);
 
   @override
-  String v5(_, __, {options}) => 'ID-${counter++}';
+  String v1({options}) => 'ID-${counter++}';
 }
