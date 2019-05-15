@@ -115,49 +115,41 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
     return result;
   }
 
-  final _onFetch = <Reference<T>, StreamController<T>>{};
-
   @override
   fetch(entity) {
-    return _onFetch.putIfAbsent(entity, () {
-      StreamController<T> controller;
-      return controller = StreamController.broadcast(
-        onCancel: () {
-          _onFetch.remove(controller);
-        },
-        onListen: () {
-          controller
-            ..add(_data.lookup(entity))
-            ..addStream(_data.onUpdated
-                .where((ref) => entity == ref)
-                .map(_data.lookup));
-        },
-      );
-    }).stream;
+    StreamController<T> controller;
+    controller = StreamController.broadcast(
+      onListen: () {
+        controller
+          ..add(_data.lookup(entity))
+          ..addStream(
+            _data.onUpdated.where((ref) => entity == ref).map(_data.lookup),
+          );
+      },
+    );
+    return controller.stream;
   }
-
-  StreamController<List<T>> _onList;
-  StreamSubscription<void> _onListUpdated;
-  StreamSubscription<void> _onListDeleted;
 
   @override
   list() {
-    _onList ??= StreamController.broadcast(
+    StreamSubscription<void> onListUpdated;
+    StreamSubscription<void> onListDeleted;
+    StreamController<List<T>> controller;
+    controller = StreamController.broadcast(
       onCancel: () {
-        _onList = null;
-        _onListUpdated?.cancel();
-        _onListDeleted?.cancel();
+        onListUpdated.cancel();
+        onListDeleted.cancel();
       },
       onListen: () {
         void update() {
-          _onList?.add(_data._delegate.build().asList());
+          controller.add(_data._delegate.build().asList());
         }
 
-        _onListDeleted = _data.onDeleted.listen((_) {
+        onListDeleted = _data.onDeleted.listen((_) {
           update();
         });
 
-        _onListUpdated = _data.onUpdated.listen((_) {
+        onListUpdated = _data.onUpdated.listen((_) {
           update();
         });
 
@@ -165,7 +157,7 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
         update();
       },
     );
-    return _onList.stream;
+    return controller.stream;
   }
 }
 

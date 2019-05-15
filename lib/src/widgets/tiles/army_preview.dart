@@ -52,8 +52,6 @@ class _ArmyPreviewListState extends State<ArmyPreviewList> {
   final Set<Reference<Army>> _deleting = {};
 
   Iterable<Army> get visibleArmies {
-    print(
-        'Possible => ${widget.armies.map((a) => a.id)}. Deleting => ${_deleting.map((a) => a.id)}');
     return widget.armies.where((a) => !_deleting.contains(a.toRef()));
   }
 
