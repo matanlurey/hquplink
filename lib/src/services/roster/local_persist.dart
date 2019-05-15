@@ -1,90 +1,14 @@
 import 'dart:async';
 
 import 'package:built_collection/built_collection.dart';
-import 'package:meta/meta.dart';
+import 'package:hquplink/models.dart';
+import 'package:swlegion/catalog.dart';
 import 'package:swlegion/swlegion.dart';
+import 'package:uuid/uuid.dart';
 
+import 'data_store.dart';
+import 'entity_list.dart';
 import 'persistence.dart';
-
-/// Wraps and provides hooks for modifications to `ListBuilder<T>`.
-class EntityList<T extends Indexable<T>> {
-  final ListBuilder<T> _delegate;
-
-  final T Function(T) _assignId;
-
-  StreamController<Reference<T>> _onUpdated;
-  StreamController<Reference<T>> _onDeleted;
-
-  EntityList(
-    this._delegate, {
-    @required T Function(T) assignId,
-  })  : assert(assignId != null),
-        _assignId = assignId;
-
-  Stream<Reference<T>> get onUpdated {
-    _onUpdated ??= StreamController.broadcast(
-      onCancel: () {
-        _onUpdated = null;
-      },
-    );
-    return _onUpdated.stream;
-  }
-
-  Stream<Reference<T>> get onDeleted {
-    _onDeleted ??= StreamController.broadcast(
-      onCancel: () {
-        _onDeleted = null;
-      },
-    );
-    return _onDeleted.stream;
-  }
-
-  int _indexOf(String id) {
-    final list = _delegate;
-    final length = list.length;
-    for (var i = 0; i < length; i++) {
-      if (list[i].id == id) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  /// Removes [reference]'s entity from the backing store.
-  bool remove(Reference<T> reference) {
-    final index = _indexOf(reference.id);
-    if (index == -1) {
-      return false;
-    }
-    _delegate.removeAt(index);
-    _onDeleted?.add(reference);
-    return true;
-  }
-
-  /// Clears all entities.
-  ///
-  /// **NOTE**: This does not invoke notifiers.
-  void clear() {
-    _delegate.clear();
-  }
-
-  /// Inserts or updates [entity] from the backing store.
-  T update(T entity) {
-    if (entity.id == null) {
-      entity = _assignId(entity);
-      _delegate.add(entity);
-    } else {
-      _delegate[_indexOf(entity.id)] = entity;
-    }
-    _onUpdated?.add(entity.toRef());
-    return entity;
-  }
-
-  /// Finds the entity [T] by `Reference<T>`.
-  T lookup(Reference<T> entity) {
-    return _delegate[_indexOf(entity.id)];
-  }
-}
 
 /// Implements a limited local data store for entities [T].
 class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
@@ -142,7 +66,7 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
       },
       onListen: () {
         void update() {
-          controller.add(_data._delegate.build().asList());
+          controller.add(_data.toList());
         }
 
         onListDeleted = _data.onDeleted.listen((_) {
@@ -165,4 +89,129 @@ class LocalPersistance<T extends Indexable<T>> implements Persistent<T> {
 enum LocalDataAction {
   updated,
   deleted,
+}
+
+/// Fired when [LocalData] is mutated in a [DataStore].
+typedef LocalDataChanged = void Function(LocalData);
+
+/// An in-memory local representation of [DataStore].
+///
+/// This backend does not support [Persistent.fetch] and [Persistent.list]
+/// completely (any mutations do not trigger another stream notification).
+class LocalStore implements DataStore {
+  static void _doNothing(LocalData _) => _;
+
+  final LocalDataBuilder _localData;
+  final Uuid _idGenerator;
+
+  final LocalDataChanged _onChanged;
+  var _scheduledChange = false;
+
+  LocalStore({
+    Uuid idGenerator,
+    LocalDataChanged onChanged = _doNothing,
+  })  : _localData = LocalDataBuilder(),
+        _idGenerator = idGenerator ?? Uuid(),
+        _onChanged = onChanged;
+
+  LocalStore.from(
+    LocalData data, {
+    Uuid idGenerator,
+    LocalDataChanged onChanged = _doNothing,
+  })  : _localData = data.toBuilder(),
+        _idGenerator = idGenerator ?? Uuid(),
+        _onChanged = onChanged;
+
+  int _indexOf<T extends Indexable<T>>(ListBuilder<T> list, String id) {
+    final length = list.length;
+    for (var i = 0; i < length; i++) {
+      if (list[i].id == id) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  String _nextId(Type entityType) {
+    return _idGenerator.v1(
+      options: <String, String>{'entityType': '$entityType'},
+    );
+  }
+
+  void _updateArmyAggregations(Reference<Army> reference) {
+    final armies = _localData.armies;
+    final index = _indexOf(armies, reference.id);
+    if (index == -1) {
+      return;
+    }
+    final squads = _localData.squads[reference].build();
+    final totalPoints = squads.fold<int>(0, (sum, squad) {
+      final unit = catalog.toUnit(squad.card);
+      final allUpgrades = squad.upgrades.map(catalog.toUpgrade);
+      final sumUpgrades = allUpgrades.fold<int>(
+        0,
+        (s, u) => s + u.points,
+      );
+      return sum + unit.points + sumUpgrades;
+    });
+    this
+        .armies()
+        .update(armies[index].rebuild((b) => b.totalPoints = totalPoints));
+  }
+
+  void _clearSquads(Reference<Army> army) {
+    _squads[army]?.clear();
+  }
+
+  void _scheduleDataChanged() {
+    if (_scheduledChange) {
+      return;
+    }
+    _scheduledChange = true;
+    scheduleMicrotask(() {
+      _onChanged(_localData.build());
+    });
+  }
+
+  LocalPersistance<Army> _armies;
+
+  @override
+  armies() {
+    if (_armies == null) {
+      final list = EntityList<Army>(
+        _localData.armies,
+        assignId: (army) {
+          return army.rebuild((b) => b.id = _nextId(Army));
+        },
+      );
+      _armies = LocalPersistance(list, (ref, action) {
+        _scheduleDataChanged();
+        if (action == LocalDataAction.deleted) {
+          _clearSquads(ref);
+        }
+      });
+    }
+    return _armies;
+  }
+
+  final _squads = <Reference<Army>, LocalPersistance<Squad>>{};
+
+  @override
+  squads(army) {
+    army = army.toRef();
+    var squad = _squads[army];
+    if (squad == null) {
+      final list = EntityList<Squad>(
+        _localData.squads[army],
+        assignId: (squad) {
+          return squad.rebuild((b) => b.id = _nextId(Squad));
+        },
+      );
+      squad = _squads[army] = LocalPersistance(list, (_, __) {
+        _updateArmyAggregations(army);
+        _scheduleDataChanged();
+      });
+    }
+    return squad;
+  }
 }
