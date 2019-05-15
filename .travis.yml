@@ -12,18 +12,21 @@ addons:
       - fonts-droid
 
 before_script:
+  - pushd $HOME
   - git clone https://github.com/flutter/flutter.git -b stable --single-branch
-  - ./flutter/bin/flutter doctor
+  - popd $HOME
+  - $HOME/flutter/bin/flutter doctor
   - gem install coveralls-lcov
 
 script:
-  - ./flutter/bin/flutter format --set-exit-if-changed .
-  - ./flutter/bin/flutter analyze
-  - ./flutter/bin/flutter test --coverage
+  - $HOME/flutter/bin/flutter format --set-exit-if-changed .
+  - $HOME/flutter/bin/flutter analyze
+  - $HOME/flutter/bin/flutter test --coverage
 
 after_success:
   - coveralls-lcov coverage/lcov.info
 
 cache:
   directories:
+    - $HOME/flutter
     - $HOME/.pub-cache
