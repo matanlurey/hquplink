@@ -14,7 +14,7 @@ addons:
 before_script:
   - pushd $HOME
   - git clone https://github.com/flutter/flutter.git -b stable --single-branch
-  - popd $HOME
+  - popd
   - $HOME/flutter/bin/flutter doctor
   - gem install coveralls-lcov
 
