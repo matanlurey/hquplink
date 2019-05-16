@@ -33,7 +33,10 @@ class _SquadsPageState extends State<SquadsPage> {
 
   @override
   build(context) {
-    return Page(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.army.name),
+      ),
       body: StreamBuilder<List<Squad>>(
         // TODO: Avoid FOUC by pre-fetching?
         initialData: const [],
@@ -43,7 +46,6 @@ class _SquadsPageState extends State<SquadsPage> {
           return Container();
         },
       ),
-      title: widget.army.name,
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () async {
