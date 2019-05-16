@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hquplink/models.dart';
 import 'package:hquplink/src/services/roster.dart';
-import 'package:hquplink/widgets.dart';
 
 class SquadsPage extends StatefulWidget {
   final Army army;
@@ -49,10 +48,7 @@ class _SquadsPageState extends State<SquadsPage> {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () async {
-          final newArmy = await ArmyMetaDialog.show(context);
-          if (newArmy != null) {
-            await DataStore.of(context).armies().update(newArmy);
-          }
+          // TODO: Implement.
         },
       ),
     );
