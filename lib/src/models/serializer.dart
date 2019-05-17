@@ -39,6 +39,12 @@ final Serializers appSerializers = (SerializersBuilder()
         () => ListBuilder<Reference<Unit>>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [
+          FullType(Reference, [FullType(Upgrade)])
+        ]),
+        () => ListBuilder<Reference<Upgrade>>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltListMultimap, [
           FullType(Reference, [FullType(Army)]),
           FullType(Squad),
