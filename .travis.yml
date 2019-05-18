@@ -28,5 +28,4 @@ after_success:
 
 cache:
   directories:
-    - $HOME/flutter
     - $HOME/.pub-cache
