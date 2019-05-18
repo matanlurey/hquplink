@@ -3,6 +3,40 @@ import 'package:hquplink/widgets.dart';
 import 'package:swlegion/catalog.dart';
 import 'package:swlegion/swlegion.dart';
 
+/// Creates a [ListTile] for a [Unit].
+class UnitTile extends StatelessWidget {
+  /// Whether the tile should appear as not selectable.
+  final bool isDisabled;
+
+  /// [Unit] being referenced for the tile.
+  final Reference<Unit> card;
+
+  /// When the tile is pressed.
+  final void Function() onTap;
+
+  const UnitTile({
+    @required this.card,
+    this.isDisabled = false,
+    this.onTap,
+  }) : assert(card != null);
+
+  @override
+  build(_) {
+    final details = catalog.toUnit(card);
+    return ListTile(
+      leading: UnitIcon(card: details),
+      enabled: !isDisabled,
+      trailing: Text('${details.points}'),
+      title: Text(
+        details.name,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: details.subTitle != null ? Text(details.subTitle) : null,
+      onTap: onTap,
+    );
+  }
+}
+
 /// Creates multiple [Unit]s for a given [Rank] as a header.
 class UnitTileGroup extends StatelessWidget {
   /// Cards being rendered.
@@ -19,7 +53,6 @@ class UnitTileGroup extends StatelessWidget {
     @required this.rank,
     this.onTap,
   }) : assert(rank != null) {
-    // ignore: prefer_asserts_in_initializer_lists
     assert(cards != null && cards.isNotEmpty);
   }
 
@@ -74,7 +107,18 @@ class RankTile extends StatelessWidget {
         toTitleCase(rank.name),
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Text(_ruleSet[rank]),
+      trailing: Row(
+        children: [
+          if (onPressed != null)
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: onPressed,
+            ),
+          Text(_ruleSet[rank]),
+        ],
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      ),
       leading: CircleAvatar(
         // TODO: Use an icon instead.
         child: Text(rank.name[0].toUpperCase()),

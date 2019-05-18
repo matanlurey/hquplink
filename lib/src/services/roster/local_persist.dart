@@ -160,7 +160,7 @@ class LocalStore implements DataStore {
   }
 
   void _clearSquads(Reference<Army> army) {
-    _squads[army]?.clear();
+    _squadsForArmy[army]?.clear();
   }
 
   void _scheduleDataChanged() {
@@ -169,6 +169,7 @@ class LocalStore implements DataStore {
     }
     _scheduledChange = true;
     scheduleMicrotask(() {
+      _scheduledChange = false;
       _onChanged(_localData.build());
     });
   }
@@ -179,7 +180,7 @@ class LocalStore implements DataStore {
   armies() {
     if (_armies == null) {
       final list = EntityList<Army>(
-        _localData.armies,
+        () => _localData.armies,
         assignId: (army) {
           return army.rebuild((b) => b.id = _nextId(Army));
         },
@@ -194,20 +195,20 @@ class LocalStore implements DataStore {
     return _armies;
   }
 
-  final _squads = <Reference<Army>, LocalPersistance<Squad>>{};
+  final _squadsForArmy = <Reference<Army>, LocalPersistance<Squad>>{};
 
   @override
   squads(army) {
     army = army.toRef();
-    var squad = _squads[army];
+    var squad = _squadsForArmy[army];
     if (squad == null) {
       final list = EntityList<Squad>(
-        _localData.squads[army],
+        () => _localData.squads[army],
         assignId: (squad) {
           return squad.rebuild((b) => b.id = _nextId(Squad));
         },
       );
-      squad = _squads[army] = LocalPersistance(list, (_, __) {
+      squad = _squadsForArmy[army] = LocalPersistance(list, (_, __) {
         _updateArmyAggregations(army);
         _scheduleDataChanged();
       });

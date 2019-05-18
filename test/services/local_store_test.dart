@@ -82,7 +82,7 @@ void main() {
             savedDarthVader,
           ),
       ),
-      onChanged: expectAsync1((_) {}, count: 1),
+      onChanged: expectAsync1((_) {}, count: 2),
     );
 
     expect(await store.squads(army).list().first, hasLength(1));
@@ -93,6 +93,14 @@ void main() {
       await store.squads(army).list().first,
       hasLength(2),
       reason: 'Stormtroopers should have been added',
+    );
+
+    final snows = Squad((b) => b..card = Units.snowtroopers);
+    await store.squads(army).update(snows);
+    expect(
+      await store.squads(army).list().first,
+      hasLength(3),
+      reason: 'Snowtroopers should have been added',
     );
   });
 
@@ -107,16 +115,30 @@ void main() {
             savedDarthVader,
           ),
       ),
-      onChanged: expectAsync1((_) {}, count: 1),
+      onChanged: expectAsync1((_) {}, count: 2),
     );
 
     final storms = Squad((b) => b..card = Units.stormtroopers);
     await store.squads(army).update(storms);
 
-    final saved = await store.armies().fetch(army).first;
+    // Validate Vader + Stormtroopers.
+    var saved = await store.armies().fetch(army).first;
     expect(
       saved.totalPoints,
       Units.darthVader.points + Units.stormtroopers.points,
+    );
+
+    // Catches a bug where subsequent edits to an army did not trigger updates.
+    final snows = Squad((b) => b..card = Units.snowtroopers);
+    await store.squads(army).update(snows);
+
+    // Validate Vader + Stormtroopers + Snowtroopers.
+    saved = await store.armies().fetch(army).first;
+    expect(
+      saved.totalPoints,
+      Units.darthVader.points +
+          Units.stormtroopers.points +
+          Units.snowtroopers.points,
     );
   });
 

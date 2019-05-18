@@ -6,7 +6,7 @@ import 'package:swlegion/swlegion.dart';
 
 /// Wraps and provides hooks for modifications to `ListBuilder<T>`.
 class EntityList<T extends Indexable<T>> {
-  final ListBuilder<T> _delegate;
+  final ListBuilder<T> Function() _delegate;
 
   final T Function(T) _assignId;
 
@@ -38,7 +38,7 @@ class EntityList<T extends Indexable<T>> {
   }
 
   int _indexOf(String id) {
-    final list = _delegate;
+    final list = _delegate();
     final length = list.length;
     for (var i = 0; i < length; i++) {
       if (list[i].id == id) {
@@ -48,7 +48,7 @@ class EntityList<T extends Indexable<T>> {
     return -1;
   }
 
-  List<T> toList() => _delegate.build().asList();
+  List<T> toList() => _delegate().build().asList();
 
   /// Removes [reference]'s entity from the backing store.
   bool remove(Reference<T> reference) {
@@ -56,7 +56,7 @@ class EntityList<T extends Indexable<T>> {
     if (index == -1) {
       return false;
     }
-    _delegate.removeAt(index);
+    _delegate().removeAt(index);
     _onDeleted?.add(reference);
     return true;
   }
@@ -65,16 +65,16 @@ class EntityList<T extends Indexable<T>> {
   ///
   /// **NOTE**: This does not invoke notifiers.
   void clear() {
-    _delegate.clear();
+    _delegate().clear();
   }
 
   /// Inserts or updates [entity] from the backing store.
   T update(T entity) {
     if (entity.id == null) {
       entity = _assignId(entity);
-      _delegate.add(entity);
+      _delegate().add(entity);
     } else {
-      _delegate[_indexOf(entity.id)] = entity;
+      _delegate()[_indexOf(entity.id)] = entity;
     }
     _onUpdated?.add(entity.toRef());
     return entity;
@@ -82,6 +82,6 @@ class EntityList<T extends Indexable<T>> {
 
   /// Finds the entity [T] by `Reference<T>`.
   T lookup(Reference<T> entity) {
-    return _delegate[_indexOf(entity.id)];
+    return _delegate()[_indexOf(entity.id)];
   }
 }

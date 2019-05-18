@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:built_value/serializer.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hquplink/models.dart';
 import 'package:path/path.dart' as p;
@@ -20,13 +21,17 @@ void main() async {
   var initialData = LocalData((_) {});
   if (await jsonFile.exists()) {
     final jsonText = await jsonFile.readAsString();
-    initialData = appSerializers.deserializeWith(
-      LocalData.serializer,
-      jsonDecode(jsonText),
-    );
-    print(
-      'Loaded initialData (${jsonText.length} bytes) from ${jsonFile.path}',
-    );
+    try {
+      initialData = appSerializers.deserializeWith(
+        LocalData.serializer,
+        jsonDecode(jsonText),
+      );
+      print(
+        'Loaded initialData (${jsonText.length} bytes) from ${jsonFile.path}',
+      );
+    } on DeserializationError catch (e, s) {
+      print('Failed to deserialize: $e\n$s');
+    }
   } else {
     print('No initialData found (${jsonFile.path})');
   }
