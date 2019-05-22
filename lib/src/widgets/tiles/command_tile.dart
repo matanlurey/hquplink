@@ -115,32 +115,3 @@ class _UnitCommandTileGroup extends CommandTileGroup {
     return UnitIcon(card: unit);
   }
 }
-
-/// Creates a [ListTile] for a [Unit].
-class UnitTile extends StatelessWidget {
-  /// [Unit] being referenced for the tile.
-  final Reference<Unit> card;
-
-  /// When the tile is pressed.
-  final void Function() onTap;
-
-  const UnitTile({
-    @required this.card,
-    this.onTap,
-  }) : assert(card != null);
-
-  @override
-  build(_) {
-    final details = catalog.toUnit(card);
-    return ListTile(
-      leading: UnitIcon(card: details),
-      trailing: Text('${details.points}'),
-      title: Text(
-        details.name,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: details.subTitle != null ? Text(details.subTitle) : null,
-      onTap: onTap,
-    );
-  }
-}

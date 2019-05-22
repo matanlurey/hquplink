@@ -16,7 +16,8 @@ class SquadsPage extends StatefulWidget {
   createState() => _SquadsPageState();
 }
 
-class _SquadsPageState extends State<SquadsPage> {
+class _SquadsPageState extends State<SquadsPage>
+    with DismissableListMixin<Squad, SquadsPage> {
   /// Currentlty displayed units for the army.
   var _units = const Stream<List<Squad>>.empty();
 
@@ -34,6 +35,16 @@ class _SquadsPageState extends State<SquadsPage> {
   }
 
   @override
+  labelEntity(entity) => 'Removed ${catalog.toUnit(entity.card).name}';
+
+  @override
+  persistDelete(entity) async {
+    await DataStore.of(context)
+        .squads(widget.army.toRef())
+        .delete(entity.toRef());
+  }
+
+  @override
   build(context) {
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +55,6 @@ class _SquadsPageState extends State<SquadsPage> {
         initialData: const [],
         stream: _units,
         builder: (context, snapshot) {
-          // TOOD: Finish implemententation.
           return ListView(
             children: Rank.values.map((rank) {
               final header = Container(
@@ -58,6 +68,10 @@ class _SquadsPageState extends State<SquadsPage> {
                           return _AddUnitDialog(
                             faction: widget.army.faction,
                             rank: rank,
+                            uniques: snapshot.data
+                                .map((s) => catalog.toUnit(s.card))
+                                .where((u) => u.isUnique)
+                                .toSet(),
                           );
                         },
                         fullscreenDialog: true,
@@ -73,13 +87,18 @@ class _SquadsPageState extends State<SquadsPage> {
                 color: Theme.of(context).backgroundColor,
               );
               final units = snapshot.data
-                  .where((s) => catalog.toUnit(s.card).rank == rank)
-                  .map(
-                    (squad) => UnitTile(card: squad.card),
-                  )
+                  .where((s) => catalog.toUnit(s.card).rank == rank);
+              final visible = visibleEntities(units)
+                  .map((squad) => wrapDismiss(
+                        context,
+                        squad,
+                        UnitTile(
+                          card: squad.card,
+                        ),
+                      ))
                   .toList();
               return Column(
-                children: <Widget>[header] + units,
+                children: <Widget>[header] + visible,
               );
             }).toList(),
           );
@@ -96,14 +115,29 @@ class _AddUnitDialog extends StatelessWidget {
     });
   }
 
+  /// Faction to select units from.
   final Faction faction;
+
+  /// Rank to select units from.
   final Rank rank;
 
-  const _AddUnitDialog({
+  /// Unique units that cannot be selected.
+  final Set<Unit> uniques;
+
+  _AddUnitDialog({
     @required this.faction,
     @required this.rank,
+    this.uniques = const {},
   })  : assert(faction != null),
-        assert(rank != null);
+        assert(rank != null),
+        assert(uniques != null) {
+    assert(() {
+      for (final unique in uniques) {
+        assert(unique.isUnique, '${unique.name} is not a unique unit.');
+      }
+      return true;
+    }());
+  }
 
   @override
   build(context) {
@@ -119,6 +153,7 @@ class _AddUnitDialog extends StatelessWidget {
             onTap: () {
               Navigator.pop(context, unit);
             },
+            isDisabled: uniques.contains(unit),
           );
         }).toList(),
       ),

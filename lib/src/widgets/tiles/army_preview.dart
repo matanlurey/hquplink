@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hquplink/models.dart';
 import 'package:hquplink/widgets.dart';
-import 'package:swlegion/swlegion.dart';
 
 class ArmyPreviewTile extends StatelessWidget {
   final Army army;
@@ -48,53 +47,29 @@ class ArmyPreviewList extends StatefulWidget {
   createState() => _ArmyPreviewListState();
 }
 
-class _ArmyPreviewListState extends State<ArmyPreviewList> {
-  final Set<Reference<Army>> _deleting = {};
-
-  Iterable<Army> get visibleArmies {
-    return widget.armies.where((a) => !_deleting.contains(a.toRef()));
-  }
-
+class _ArmyPreviewListState extends State<ArmyPreviewList>
+    with DismissableListMixin<Army, ArmyPreviewList> {
   @override
   build(context) {
     return ListView(
-      children: visibleArmies.map((army) {
-        return Dismissible(
-          child: ArmyPreviewTile(
+      children: visibleEntities(widget.armies).map((army) {
+        return wrapDismiss(
+          context,
+          army,
+          ArmyPreviewTile(
             army: army,
             onPressed: () => widget.onPressed(army),
           ),
-          key: Key(army.id),
-          background: const DismissBackground(),
-          onDismissed: (_) => _onDismissed(army),
         );
       }).toList(),
     );
   }
 
-  // TODO: Encapsulate in a re-usable function and/or mixin.
-  //
-  // Also potentially worthy to encapsulate the entire widget concept.
-  void _onDismissed(Army army) async {
-    setState(() {
-      _deleting.add(army.toRef());
-    });
-    final controller = Scaffold.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Deleted ${army.name}'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            // Intentionally left blank.
-          },
-        ),
-      ),
-    );
-    if (await controller.closed != SnackBarClosedReason.action) {
-      widget.onDelete(army);
-    }
-    setState(() {
-      _deleting.remove(army.toRef());
-    });
+  @override
+  labelEntity(entity) => 'Removed "${entity.name}"';
+
+  @override
+  persistDelete(entity) {
+    widget.onDelete(entity);
   }
 }
